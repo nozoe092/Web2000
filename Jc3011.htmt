@@ -1,0 +1,586 @@
+<!-- 照会訂正 検索後 -->
+<HTML>
+
+<HEAD>
+${__meta_nocache__}
+${__meta_charset__}
+${__title__}
+${__script_commonproc__}
+${__script_commondialog__}
+${JC3010SCRIPT}
+<link rel="stylesheet" href="/css/modal.css">
+${JQUERY}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js"></script>
+
+${__style_gaiji_font__}
+
+<style>
+
+.list-2 {
+    counter-reset: li;
+    padding-left: 5px;
+}
+
+.list-2 li {
+    display: flex;
+    align-items: center;
+    padding: .3em;
+    display: flex;
+    align-items: flex-start;
+}
+
+
+.list-2 li::before {
+    display: inline-block;
+    min-width: 1.7em;
+    margin-right: 5px;
+    border-radius: 50%;
+    background-color: #ff3d00ad;
+    color: #fff;
+    font-weight: bold;
+    font-size: .75em;
+    line-height: 1.7em;
+    text-align: center;
+    content: counter(li);
+    counter-increment: li;
+}
+
+
+/*左上に背景色ありタイトル*/
+.box5-3{
+	margin: 0px 30px 40px 30px;
+    padding: 20px 30px 20px 50px;
+    position: relative;
+    border: 1px solid #909792;
+}
+.box5-3 .box-title {
+	background-color:#909792; /* タイトル背景色 */
+	font-size: 1em;/* タイトル文字の大きさ */
+	color: #fff ; /* タイトル文字色 */
+	padding: 7px 10px;/*タイトルの余白*/
+	line-height: 1;/*タイトルの行の高さ*/
+	position:absolute;	/* 配置(ここを動かす) */
+	top: 0; /*上から（0px）移動*/
+	left: 0; /*左から(0px)移動*/
+}
+
+/* Adjusted CSS to position buttons closer to the modal window */
+#modal_content-wrap_PDF {
+    position: relative;
+    width: 80%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 820px;
+    background-color: #fefefe;
+    z-index: 2;
+    border-radius: 5px;
+    padding-bottom: 50px;
+    overflow: hidden;
+    max-width: 90%;
+}
+
+#modal_close-label_PDF{
+	border-radius: 5px;
+	position: absolute;
+    bottom: 10px;
+    right: 40px;
+    top : auto;
+}
+
+#img_position{
+	overflow: auto;
+	border-bottom: 2px solid black;
+    margin-bottom: 5px;
+    background-color: #e7e7e7;
+    max-height: 65vh;
+}
+
+
+#pdfViewer {
+    border: 1px solid #9d9d9d;
+    display: block;
+    margin: 0 auto;
+    transform-origin: top left;
+    transition: transform 0.2s ease;
+    margin: 15px;
+}
+
+#pdfModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    text-align: center;
+}
+
+.zoom-controls {
+    margin-top: 10px;
+    text-align: center;
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+}
+
+.zoom-controls button {
+    font-size: 16px;
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+
+.zoom-controls {
+    position: absolute;
+    bottom: 10px; /* Adjust this value to move the buttons closer or further */
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.chakubi-setumei-table{
+	width: 70%;
+    border: 1px solid #ccc; /* テーブル全体の枠線を追加 */
+    border-collapse: collapse;
+}
+
+.chakubi-setumei-table th, .chakubi-setumei-table td {
+	border: 1px solid #ccc; /* セルの枠線を追加 */
+    padding: 4px;
+    text-align: center;
+    text-align: left;
+}
+
+.chakubi-setumei-table th{
+	background-color: #8eebcd9e;
+	    text-align: center;
+}
+
+.noshi-nyuryoku-rei{
+	font-size:13px;
+	margin:0;
+}
+
+.noshi-img{
+	width:170px;
+}
+
+
+</style>
+
+</HEAD>
+
+${__body__}
+${__page_header__}
+<!-- 検索条件FORM -->
+<form method="post" name="kensaku" action="${action}">
+${HIDDEN_FUNC}
+${HIDDEN_VIEW}
+<input type="hidden" name="denpyou_syurui_mei" value="">
+${SET_MSG}
+<table align="left" bgcolor="${color.tablebgcolor}" border>
+<tr><td bgcolor="${color.detailbgcolor2}">
+<font color="${color.require}">申込番号</font>&nbsp;：&nbsp;${input_order_no}
+<font color="${color.require}">行Ｎｏ</font>&nbsp;：&nbsp;${input_gyo_no}
+枝Ｎｏ&nbsp;：&nbsp;${input_eda_no}
+${input_kensaku}
+</td></tr></table></form><br clear=left>
+<!-- 検索条件FORM END -->
+<!--
+<table align="left" bgcolor="${color.tablebgcolor}" border>
+<tr><td bgcolor="${color.detailbgcolor2}">
+<font color="${color.require}">得意先&nbsp;：&nbsp;</font>${tokuisaki_name}
+</td></tr></table><br clear=left>
+-->
+<!-- 検索結果表示部分 -->
+<form method="post" name="result" action="${action}" target="_blank">
+${HIDDEN_FUNC}
+${HIDDEN_VIEW}
+${HIDDEN_FUNC_PDF}
+${HIDDEN_VIEW_PDF}
+${input_hidden_parameter}
+
+<!-- データ表示テーブル -->
+<table align="left" border=0>
+<tr>
+<td valign="top">
+
+<table align="left" bgcolor="${color.tablebgcolor}" border>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>得意先名</td>
+<td bgcolor="${color.detailbgcolor1}">${tokuisaki_name}</td></tr>
+${input_order_no_edit}<!--サンリッチ'0000'ユーザの場合のみ表示-->
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>受注入力日</td><!--サンリッチ'0000'ユーザの場合のみ入力エリアで表示-->
+<td bgcolor="${color.detailbgcolor1}">${jyutyu_nyuryokubi}</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>承り日</td>
+<td bgcolor="${color.detailbgcolor1}" >${input_uketamawaribi}</td></tr>
+${input_hagakihenshinbi}
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>発注方法</td>
+<td bgcolor="${color.detailbgcolor1}">
+${input_fax_kubun}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>承り区分</td>
+<td bgcolor="${color.detailbgcolor1}" nowrap>
+${input_uke_kubun}<br>
+依頼者&nbsp;&nbsp;：&nbsp;${input_uke_iraisha}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>ギフトプロパー区分</td>
+<td bgcolor="${color.detailbgcolor1}">${propakbn}</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>受注担当者</td>
+<td bgcolor="${color.detailbgcolor1}">${tantosya}</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>登録者</td>
+<td bgcolor="${color.detailbgcolor1}">${tourokusha}</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>最終更新者</td>
+<td bgcolor="${color.detailbgcolor1}">${koushinsha}</td></tr>
+${MARUEI_BEGIN}<tr><td bgcolor="${color.detailbgcolor1}" colspan="2">${rirekiTyumonSyo}</td></tr>${MARUEI_END}
+</table>
+${IRAI_INFO_2}
+</td>
+
+<td valign="top">
+<!-- ご依頼主情報表示テーブル -->
+<table bgcolor="${color.tablebgcolor}" border>
+${NO_MARUEI_BEGIN}<tr><td bgcolor="${color.headerbgcolor}" colspan="2">履歴注文</td><td bgcolor="${color.detailbgcolor1}">${rirekiTyumonSyo}</td></tr>${NO_MARUEI_END}
+${IRAI_INFO_1}
+${SIHARAI_INFO}
+</table>
+</td>
+</tr>
+</table>
+
+<!-- 操作ボタン -->
+
+<!-- 仕切り線 -->
+<br clear=left>
+${toiawase_atena}
+${result_btn}
+<hr>
+<!-- 検索結果表示テーブル -->
+<table align="left" border bgcolor="${color.tablebgcolor}">
+<tr><td align="center" colspan="4" bgcolor="${color.headerbgcolor}" nowrap>お届け先</td>
+<td align="center" colspan="4" bgcolor="${color.headerbgcolor}" nowrap>商品／配送</td></tr>
+<tr><td align="center" bgcolor="${color.headerbgcolor}" nowrap>ご用途</td>
+<td colspan="3" bgcolor="${color.detailbgcolor1}" nowrap>
+${input_yoto_tujyo}
+${input_yoto_honnin}
+${input_yoto_motikaeri}
+</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>種別</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+&lt;
+${input_syohin_syubetu}
+&gt;
+${input_syubetu_irregular}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" rowspan="3" nowrap>住所</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" rowspan="3" nowrap>${input_todokesaki_no}${douhou}〒
+${input_todokesaki_yubin_no}
+TEL
+${input_todokesaki_tel_no}
+${input_todokesaki_kensaku}<br>
+${input_todokesaki_jyusyo_1}<br>
+${input_todokesaki_jyusyo_2}　　　${todoke_tuuchi}
+</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>コード</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>${input_syohin_code}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>名称</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="2" nowrap>${input_syohin_name}</td>
+<td bgcolor="${color.detailbgcolor1}" nowrap>数量
+${input_syohin_num}
+≦
+${input_syohin_max_num}</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap></td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>管理Ｎｏ：${input_kanri_no}</td>
+</tr>
+<tr><td bgcolor="${color.headerbgcolor}" rowspan="4" nowrap>氏名</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" rowspan="4" nowrap>
+${input_todokesaki_name_1}<br>
+${input_todokesaki_name_2}<br>
+${input_todokesaki_name_3}様</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>価格／送料</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+販売価格：${input_kakaku_hanbai}
+&nbsp;${input_kakaku_shiire}
+&nbsp;受入：${input_soryo_ukeire}
+&nbsp;支払：${input_soryo_shiharai}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>配送業者</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${inputo_haisou_select} 発店：
+${hatten}
+伝票種類：${inputo_denpyo_select}
+</td></tr>
+<!--
+//<tr><td bgcolor="${color.headerbgcolor}" nowrap>伝票</td>
+//<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+//${inputo_denpyo_syubetu}
+//</td></tr>
+-->
+
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>仕入先</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_siiresaki}
+</td></tr>
+<tr>
+<td bgcolor="${color.headerbgcolor}" nowrap>出荷元</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_syukkamoto}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>のし${noshi_manual_preview}</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_noshi_select}
+${input_noshi}
+　${noshi_print_flag}</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>伝票送付先</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_denpyou_soufusaki}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>名入れ</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_naire_select}
+${input_naire}</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>伝票印刷先</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+<!-- </td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>伝票印刷先：</td>
+-->
+${input_denpyou_insatusaki}
+<!-- <td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap> -->
+${inputo_denpyo_insatu}
+${inputo_edi_renkei_flg}
+</td>
+</tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>包装</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+${input_hoso_ichi}
+${input_hoso_ichi_nm}
+${input_hoso_hoho}
+${input_hoso}</td>
+</td>
+
+
+<td bgcolor="${color.headerbgcolor}" nowrap>
+着日指定
+<div class="modal_wrap">
+<input type="radio" id="modal_open" class="modal_open-input" name="modal_trigger">
+<label for="modal_open" class="modal_open-label"name = "modal_trigger"><img src="/images/hatena.png" alt="画像" style="height: 19px; vertical-align: middle; padding-bottom: 3px; margin-left: 5px;"></label>
+<input type="radio" id="modal_close" name="modal_trigger">
+
+  <div class="modal">
+    <div class="modal_content-wrap">
+      <label for="modal_close" class="modal_close-label">×</label>
+      <div class="modal_content">
+      
+      <h3 style="margin-bottom:0px">※着日指定の入力方法について</h3>
+      <p style="margin: 2px 0px 0px 20px">WEB2000で入力出来る着日指定には、「必着」と「あいまい着日」の2パターンがあります。
+		<ul class="list-2">
+  		  <li>「必着」⇒ その当日にお届けする必要があるもの<br>
+  		  </li>
+  		  
+  		  <div class="box5-3">
+			<div class="box-title">例</div>
+			<div style="width: 100%; overflow-wrap: break-word;">
+			    <p style="white-space: normal;">2021年7月15日必着 → 【入力方法】 20210715 又は 2021/07/15</p>
+			</div>
+		  </div>
+  		  		
+  		  <li>「あいまい着日」⇒ ●日以降、●月上旬、●月届など、はっきりとしたお届け日が決まってないが、<br>
+  		  	  　　　　　　　　　 おおよそのお届け指定があるもの
+  		  </li>
+  		  
+  		  <div class="box5-3">
+			<div class="box-title">例</div>
+			 <div style="text-align-center">
+				 <table class="chakubi-setumei-table">
+				    <thead>
+				        <tr>
+				            <th>あいまい着日</th>
+				            <th>例</th>
+				            <th>入力方法</th>
+				        </tr>
+				    </thead>
+				    <tbody>
+				        <tr>
+				            <td>○月初旬</td>
+				            <td>12月初旬</td>
+				            <td>2021/12s</td>
+				        </tr>
+				        <tr>
+				            <td>○月上旬</td>
+				            <td>12月上旬</td>
+				            <td>2021/12+</td>
+				        </tr>
+				        <tr>
+				            <td>○月中旬</td>
+				            <td>12月中旬</td>
+				            <td>2021/12++</td>
+				        </tr>
+				        <tr>
+				            <td>○月下旬</td>
+				            <td>12月下旬</td>
+				            <td>2021/12+++</td>
+				        </tr>
+				        <tr>
+				            <td>○日以降</td>
+				            <td>12月1日以降</td>
+				            <td>2021/12/01-</td>
+				        </tr>
+				        <tr>
+				            <td>○日まで</td>
+				            <td>12月1日まで</td>
+				            <td>-2021/12/01</td>
+				        </tr>
+				        <tr>
+				            <td>○月届</td>
+				            <td>12月届</td>
+				            <td>2021/12</td>
+				        </tr>
+				        <tr>
+				            <td>○月○日頃</td>
+				            <td>12月10日頃</td>
+				            <td>2021/12/10k</td>
+				        </tr>
+				    </tbody>
+				</table>
+				</div>
+		  </div>
+  		  	  
+	    </ul>
+      </p>
+      
+      
+      </div>
+    </div>
+    <label for="modal_close">
+      <div class="modal_background"></div>
+    </label>
+  </div>
+</div>
+</td>
+
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>
+着日：${input_tyakubi}&nbsp;&nbsp;時間帯：${input_jikanshitei} &nbsp;${tyakubi_ninni}
+出荷予定日：${input_syukkayoteibi}
+</td>
+</tr>
+<tr><td bgcolor="${color.headerbgcolor}" rowspan="2" nowrap>備考</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" rowspan="2" nowrap>
+配送備考　&nbsp;&nbsp;：&nbsp;${input_bikou_haiso}<br>
+伝票印字　&nbsp;&nbsp;：&nbsp;${input_bikoup}<br>
+伝票印字無&nbsp;：&nbsp;${input_bikounp}</td>
+<td bgcolor="${color.headerbgcolor}" nowrap>管理番号</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>${kanri_bangou}</td>
+</tr>
+<tr>
+<td bgcolor="${color.headerbgcolor}" nowrap>その他</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" nowrap>得意先伝票Ｎｏ&nbsp：${input_hanbai_denpyo_no}</td>
+</tr>
+<tr><td bgcolor="${color.headerbgcolor}" align="center" colspan="2" nowrap>配送状況</td>
+<td bgcolor="${color.headerbgcolor}" align="center" colspan="6" nowrap>事故処理欄</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>伝票Ｎｏ</td>
+<td bgcolor="${color.detailbgcolor1}" nowrap>${input_denpyo_no}</td>
+<td bgcolor="${color.headerbgcolor}" align="center" nowrap>調査状況</td>
+<td bgcolor="${color.headerbgcolor}" align="center" colspan="3" nowrap>事故理由</td>
+<td bgcolor="${color.headerbgcolor}" align="center" nowrap>責任区分</td>
+<td bgcolor="${color.headerbgcolor}" align="center" nowrap>調査メモ</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>出荷日</td>
+<td bgcolor="${color.detailbgcolor1}" nowrap>出荷日 ${input_syukkabi}<BR>メーカー出荷確認日 ${input_maker_syukkabi}</td>
+<td bgcolor="${color.detailbgcolor1}" rowspan="2">${input_chosa_select}<br>${input_chosa}<br>${input_kaiketu_check}</td>
+<td bgcolor="${color.detailbgcolor1}" colspan="3" rowspan="2">${input_jiko_select}<br>${input_jiko}</td>
+<td bgcolor="${color.detailbgcolor1}" rowspan="2" nowrap>
+${input_sekinin_kubun}
+</td>
+<td bgcolor="${color.detailbgcolor1}" rowspan="2" nowrap>
+${input_chosa_memo}<br>${input_chosa_memo_code}
+</td></tr>
+<tr><td bgcolor="${color.headerbgcolor}" nowrap>配完日</td>
+<td bgcolor="${color.detailbgcolor1}">${input_haikanbi}</td></tr>
+</table>
+<br clear=left>
+${for_sunrich}
+<!-- 仕切り線 -->
+<hr>
+<!-- 請求条件(管理者のみ) -->
+${seikyu_condition}
+<!-- 操作ボタン -->
+${result_btn}
+<!-- 備考欄ン -->
+${Memo}
+<!-- イメージ表示ボタン -->
+${Nosi}
+</form>
+
+<!-- 2020/06/18　商品マスタ表示ボタン -->
+<FORM NAME="ShohinMaster" METHOD="POST" action="${action}_SHOHIN" target="Mm1010">
+${form_ShohinMaster}
+</FORM>
+<!-- 検索結果表示部分 END -->
+${form_dlg010}${form_dlg020}${form_dlg030}${dlg510}${dlg520}${dlg051}
+
+
+
+<div class="modal_wrap">
+    <input type="radio" id="modal-2__open" class="modal_open-input" name="modal-2__trigger"/>
+    <label for="modal-2__open" class="modal_open-label"></label>
+    <input type="radio" id="modal-2__close" name="modal-2__trigger"/>
+    <div class="modal">
+        <div class="modal_content-wrap" id="modal_content-wrap_PDF">
+            <div class="modal_content" id="img_position"  style="padding:0px">
+            ${HAISOCODE}
+            <div id="loadingMessage" style="min-height:50%; ">
+                		<div style="text-align: center;  padding: 10%;">
+		                	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="48" height="48" fill="#215a83">
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(0 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(45 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.125s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(90 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.25s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(135 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.375s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(180 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.5s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(225 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.625s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(270 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.75s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							    <path d="M14 0 H18 V8 H14 z" transform="rotate(315 16 16)" opacity=".1">
+							        <animate attributeName="opacity" from="1" to=".1" begin="0.875s" dur="1s" repeatCount="indefinite"/>
+							    </path>
+							</svg>
+							<br><br>
+							読み込み中…
+						</div>
+					</div>
+            
+                    <!-- PDF画像を表示するimg要素 -->
+                    <img id="pdfViewer" src="" alt="PDF Image">
+                <!-- ズームコントロール -->
+                <div class="zoom-controls">
+                    <button onclick="zoomOut()">－</button>
+                    <button onclick="zoomIn()">＋</button>
+                </div>
+                <label for="modal-2__close"class="modal_close-label" id = "modal_close-label_PDF">×</label>
+            </div>
+        </div>
+        <label for="modal-2__close">
+            <div class="modal_background"></div>
+        </label>
+    </div>
+</div>
+
+</body>
+</html>
